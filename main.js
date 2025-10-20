@@ -74,28 +74,19 @@ document.addEventListener('DOMContentLoaded', function() {
 // It runs in the context of the page, not the extension.
 function scrapeJobDetails() {
     // Selectors for LinkedIn job pages can change. These are common ones.
-    // Fixed selector: missing dot between class names was preventing matches.
-    const titleSelector = '.t-24.job-details-jobs-unified-top-card__job-title, .topcard__title, h1';
-    const companySelector = '.topcard__org-name-link, .jobs-top-card__company-name-link, a[data-tracking-control-name="public_jobs_topcard-org-name"], .topcard__flavor > a';
+    const titleSelector = '.t-24 job-details-jobs-unified-top-card__job-title';
+    const companySelector = '.topcard__org-name-link, .jobs-top-card__company-name-link, a[data-tracking-control-name="public_jobs_topcard-org-name"]';
 
-    // NOTE: console.log inside an injected page script appears in the page's console,
-    // not the extension popup console. To surface diagnostics to the popup we return
-    // them from this function and log them in the popup context.
-    const diagnostics = [];
-    diagnostics.push(`running scrapeJobDetails on ${location.href}`);
+    console.log("test");
 
     const jobTitleElement = document.querySelector(titleSelector);
-    diagnostics.push(`titleSelector=${titleSelector}, found=${!!jobTitleElement}`);
-
     const companyNameElement = document.querySelector(companySelector);
-    diagnostics.push(`companySelector=${companySelector}, found=${!!companyNameElement}`);
 
     const jobTitle = jobTitleElement ? jobTitleElement.innerText.trim() : '';
     const companyName = companyNameElement ? companyNameElement.innerText.trim() : '';
 
-    diagnostics.push(`Scraped Job Title: ${jobTitle}`);
-    diagnostics.push(`Scraped Company Name: ${companyName}`);
+    console.log(`Scraped Job Title: ${jobTitle}, Company Name: ${companyName}`);
 
-    return { jobTitle, companyName, diagnostics };
+    return { jobTitle, companyName };
 }
 
