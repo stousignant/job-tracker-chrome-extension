@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const jobTitleInput = document.getElementById('jobTitle');
     const companyNameInput = document.getElementById('companyName');
+    const jobUrlInput = document.getElementById('jobUrl');
     const saveBtn = document.getElementById('saveBtn');
     const autofillBtn = document.getElementById('autofillBtn');
     const statusDiv = document.getElementById('status');
@@ -70,6 +71,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (results && (results.jobTitle || results.companyName)) {
                     jobTitleInput.value = results.jobTitle || '';
                     companyNameInput.value = results.companyName || '';
+                    jobUrlInput.value = tab.url;
                     statusDiv.textContent = 'Details filled!';
                 } else {
                     statusDiv.textContent = 'Could not find details on page.';
