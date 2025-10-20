@@ -43,13 +43,30 @@ document.addEventListener('DOMContentLoaded', function() {
                 function: scrapeJobDetails,
             }, (injectionResults) => {
                 if (chrome.runtime.lastError) {
-                    console.error(chrome.runtime.lastError);
+                    console.error('injection error', chrome.runtime.lastError);
                     statusDiv.textContent = 'Error injecting script.';
+                    setTimeout(() => { statusDiv.textContent = ''; }, 2000);
                     return;
                 }
 
-                const results = injectionResults[0].result;
-                console.log(`results2=${results}`)
+                if (!injectionResults || !injectionResults[0]) {
+                    console.error('No injection results', injectionResults);
+                    statusDiv.textContent = 'No results from page.';
+                    setTimeout(() => { statusDiv.textContent = ''; }, 2000);
+                    return;
+                }
+
+                const results = injectionResults[0].result || {};
+
+                // Log diagnostics returned from the injected page script.
+                if (results.diagnostics && Array.isArray(results.diagnostics)) {
+                    console.group('scrapeJobDetails diagnostics');
+                    results.diagnostics.forEach(d => console.log(d));
+                    console.groupEnd();
+                }
+
+                console.log('scrape results', results);
+
                 if (results && (results.jobTitle || results.companyName)) {
                     jobTitleInput.value = results.jobTitle || '';
                     companyNameInput.value = results.companyName || '';
@@ -57,7 +74,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     statusDiv.textContent = 'Could not find details on page.';
                 }
-                 setTimeout(() => {
+                setTimeout(() => {
                     statusDiv.textContent = '';
                 }, 2000);
             });
@@ -74,19 +91,28 @@ document.addEventListener('DOMContentLoaded', function() {
 // It runs in the context of the page, not the extension.
 function scrapeJobDetails() {
     // Selectors for LinkedIn job pages can change. These are common ones.
-    const titleSelector = '.t-24 job-details-jobs-unified-top-card__job-title';
-    const companySelector = '.topcard__org-name-link, .jobs-top-card__company-name-link, a[data-tracking-control-name="public_jobs_topcard-org-name"]';
+    // Fixed selector: missing dot between class names was preventing matches.
+    const titleSelector = '.t-24.job-details-jobs-unified-top-card__job-title, .topcard__title, h1';
+    const companySelector = '.job-details-jobs-unified-top-card__company-name';
 
-    console.log("test");
+    // NOTE: console.log inside an injected page script appears in the page's console,
+    // not the extension popup console. To surface diagnostics to the popup we return
+    // them from this function and log them in the popup context.
+    const diagnostics = [];
+    diagnostics.push(`running scrapeJobDetails on ${location.href}`);
 
     const jobTitleElement = document.querySelector(titleSelector);
+    diagnostics.push(`titleSelector=${titleSelector}, found=${!!jobTitleElement}`);
+
     const companyNameElement = document.querySelector(companySelector);
+    diagnostics.push(`companySelector=${companySelector}, found=${!!companyNameElement}`);
 
     const jobTitle = jobTitleElement ? jobTitleElement.innerText.trim() : '';
     const companyName = companyNameElement ? companyNameElement.innerText.trim() : '';
 
-    console.log(`Scraped Job Title: ${jobTitle}, Company Name: ${companyName}`);
+    diagnostics.push(`Scraped Job Title: ${jobTitle}`);
+    diagnostics.push(`Scraped Company Name: ${companyName}`);
 
-    return { jobTitle, companyName };
+    return { jobTitle, companyName, diagnostics };
 }
 
